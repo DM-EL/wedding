@@ -313,10 +313,47 @@
       <p class="kicker">Анкета гостя</p>
       <h2 class="heading">Подтвердите присутствие</h2>
       <div class="divider"><i>✦</i></div>
-      <div class="rsvp-card">
-        <p class="rsvp-lead">Пожалуйста, заполните короткую анкету — это поможет нам всё подготовить к встрече. Займёт меньше минуты.</p>
-        <a class="rsvp-btn" href="https://forms.yandex.ru/u/6a25797a6d2d734665cd5e81" target="_blank" rel="noopener">Подтвердить присутствие</a>
-        <p class="rsvp-note">Анкета откроется в Яндекс&nbsp;Формах</p>
+      <div class="form-card">
+        <form id="rsvpForm" novalidate>
+          <div class="fld">
+            <label for="wed-name">Имя и фамилия</label>
+            <input type="text" id="wed-name" name="name" placeholder="" autocomplete="name">
+          </div>
+          <div class="fld">
+            <label>Будете ли вы на нашей свадьбе?</label>
+            <div class="opt-row">
+              <label class="opt"><input type="radio" name="attend" value="Да, буду"><span>Да, обязательно буду</span></label>
+              <label class="opt"><input type="radio" name="attend" value="К сожалению, не смогу"><span>К сожалению, не смогу</span></label>
+            </div>
+          </div>
+          <div class="fld">
+            <label>Нужен ли вам трансфер?</label>
+            <div class="opt-row">
+              <label class="opt"><input type="radio" name="transfer" value="Да, нужен трансфер"><span>Да, нужен</span></label>
+              <label class="opt"><input type="radio" name="transfer" value="Нет, доберусь сам(а)"><span>Нет, доберусь сам(а)</span></label>
+            </div>
+          </div>
+          <div class="fld">
+            <label>Предпочтения по алкоголю</label>
+            <div class="chips">
+              <label class="chip"><input type="checkbox" name="drink" value="Водка"><span>Водка</span></label>
+              <label class="chip"><input type="checkbox" name="drink" value="Коньяк"><span>Коньяк</span></label>
+              <label class="chip"><input type="checkbox" name="drink" value="Виски"><span>Виски</span></label>
+              <label class="chip"><input type="checkbox" name="drink" value="Вино белое"><span>Вино белое</span></label>
+              <label class="chip"><input type="checkbox" name="drink" value="Вино красное"><span>Вино красное</span></label>
+              <label class="chip"><input type="checkbox" name="drink" value="Шампанское"><span>Шампанское</span></label>
+              <label class="chip"><input type="checkbox" name="drink" value="Не пью алкоголь"><span>Не пью алкоголь</span></label>
+            </div>
+            <p class="hint">Можно выбрать несколько вариантов</p>
+          </div>
+          <button type="submit" class="submit" id="wed-submit">Отправить ответ</button>
+          <p class="form-err" id="wed-err">Пожалуйста, укажите имя и ответьте, будете ли вы на свадьбе.</p>
+        </form>
+        <div class="thanks" id="wed-thanks">
+          <div class="check">✓</div>
+          <h3 id="wed-thanks-name">Спасибо!</h3>
+          <p id="wed-thanks-text">Ваш ответ сохранён. Будем очень рады встрече!</p>
+        </div>
       </div>
     </div>
   </section>
@@ -376,6 +413,53 @@
   }else{
     document.querySelectorAll('#wed .rv').forEach(function(el){el.classList.add('in')});
   }
+
+  /* ============ КУДА ОТПРАВЛЯТЬ ОТВЕТЫ ============
+     Вставьте сюда адрес вашего веб-приложения Google Apps Script
+     (заканчивается на /exec). Как его получить — в инструкции.
+     Пока пусто — форма просто показывает «Спасибо». */
+  var ENDPOINT = "https://script.google.com/macros/s/AKfycbyoANLmP7TCk4B6P9zj9r9ivf7IzZodqs4OIup0WdU577LDgdIUxK4CVUJ6n4Oy0ycapw/exec";
+
+  var form=document.getElementById('rsvpForm'),
+      err=document.getElementById('wed-err'),
+      btn=document.getElementById('wed-submit'),
+      thanks=document.getElementById('wed-thanks'),
+      tName=document.getElementById('wed-thanks-name'),
+      tText=document.getElementById('wed-thanks-text');
+
+  function showThanks(name,attend){
+    form.style.display='none';
+    tName.textContent='Спасибо, '+name.split(' ')[0]+'!';
+    tText.textContent=(attend.indexOf('Да')===0)
+      ? 'Ваш ответ сохранён. Будем очень рады встрече 12 сентября!'
+      : 'Спасибо, что дали знать. Нам будет вас не хватать.';
+    thanks.classList.add('show');
+    thanks.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+
+  form.addEventListener('submit',function(ev){
+    ev.preventDefault();
+    var name=form.name.value.trim();
+    var attend=(form.querySelector('input[name=attend]:checked')||{}).value;
+    if(!name||!attend){err.style.display='block';return;}
+    err.style.display='none';
+    var transfer=(form.querySelector('input[name=transfer]:checked')||{}).value||'—';
+    var drinks=Array.prototype.map.call(form.querySelectorAll('input[name=drink]:checked'),function(c){return c.value}).join(', ')||'—';
+    var data={name:name,attend:attend,transfer:transfer,drinks:drinks};
+
+    if(!ENDPOINT){ showThanks(name,attend); return; }
+
+    btn.disabled=true;btn.textContent='Отправляем…';
+    fetch(ENDPOINT,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(data)
+    })
+      .then(function(){ showThanks(name,attend); })
+      .catch(function(){ showThanks(name,attend); })
+      .then(function(){ btn.disabled=false; btn.textContent='Отправить ответ'; });
+  });
 })();
 </script>
 </body>

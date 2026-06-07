@@ -103,12 +103,12 @@
 #wed .count-sec .heading{color:var(--cream)}
 #wed .count-sec .divider::before,#wed .count-sec .divider::after{background:var(--gold-light)}
 #wed .count-sec .divider i{color:var(--gold-light)}
-#wed .countdown{display:flex;justify-content:center;gap:clamp(10px,4vw,30px);margin-top:42px;flex-wrap:wrap}
-#wed .cd-cell{min-width:74px}
-#wed .cd-num{font-family:var(--serif);font-size:clamp(38px,10vw,62px);line-height:1;color:var(--cream)}
+#wed .countdown{display:flex;justify-content:center;align-items:flex-start;gap:clamp(4px,2vw,28px);margin-top:42px;flex-wrap:nowrap}
+#wed .cd-cell{min-width:0;flex:0 1 auto;text-align:center}
+#wed .cd-num{font-family:var(--serif);font-size:clamp(30px,8.5vw,62px);line-height:1;color:var(--cream)}
 #wed .cd-lbl{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold-light);margin-top:12px}
 #wed .cd-dot{display:flex;align-items:flex-start;padding-top:10px}
-#wed .cd-dot span{font-family:var(--serif);font-size:clamp(30px,8vw,48px);color:rgba(201,168,106,.5)}
+#wed .cd-dot span{font-family:var(--serif);font-size:clamp(22px,5.5vw,48px);color:rgba(201,168,106,.5)}
 #wed .count-msg{margin-top:36px;font-family:var(--cormo);font-style:italic;font-size:18px;color:var(--gold-light)}
 
 /* timing */
@@ -201,6 +201,7 @@
 @keyframes wrise{to{opacity:1;transform:none}}
 @keyframes wpop{to{opacity:1;transform:scale(1)}}
 @keyframes wcue{0%,100%{opacity:.3;transform:scaleY(.4)}50%{opacity:1;transform:scaleY(1)}}
+@media(max-width:600px){#wed .cd-lbl{font-size:8px;letter-spacing:.1em;margin-top:8px}#wed .cd-dot{padding-top:6px}}
 @media(max-width:520px){#wed .opt-row{flex-direction:column}#wed .pad{padding:70px 0}}
 </style>
 
@@ -462,14 +463,13 @@
       '📍 На свадьбе: ' + attend + '\n' +
       '🚐 Трансфер: ' + transfer + '\n' +
       '🥂 Алкоголь: ' + drinks;
-    fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({chat_id:CHAT_ID, text:text})
-    })
-      .then(function(){showThanks(name,attend);})
-      .catch(function(){showThanks(name,attend);})
-      .then(function(){btn.disabled=false;btn.textContent='Отправить ответ';});
+    var url = 'https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage' +
+              '?chat_id=' + encodeURIComponent(CHAT_ID) +
+              '&text=' + encodeURIComponent(text);
+    fetch(url)
+      .then(function(){ showThanks(name,attend); })
+      .catch(function(){ showThanks(name,attend); })
+      .then(function(){ btn.disabled=false; btn.textContent='Отправить ответ'; });
   });
 
   again.addEventListener('click',function(){
